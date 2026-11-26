@@ -1,0 +1,179 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return (
+        isSignedIn() && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          (
+            request.auth.token.email_verified == true && (
+              request.auth.token.email == 'smkbaktiputramandiri@gmail.com' ||
+              request.auth.token.email == 'osisbakti@gmail.com' ||
+              request.auth.token.email == 'absensirapot@gmail.com' ||
+              request.auth.token.email == 'bpmkesparungpanjang.action@gmail.com' ||
+              request.auth.token.email == 'mohsumardi97@guru.smk.belajar.id' ||
+              request.auth.token.email == 'sumardimuhammad87@gmail.com' ||
+              request.auth.token.email == 'almeerelfaris@gmail.com'
+            )
+          )
+        )
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidPayload() {
+      return request.resource != null && request.resource.data is map;
+    }
+
+    // Admin bootstrap role collection (locked from client writes)
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list, write: if false;
+    }
+
+    // School Profile Settings, Kop Surat, Master Sync & Tombstones
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create, update: if isValidId(settingId) && isValidPayload();
+      allow delete: if isValidId(settingId);
+    }
+
+    // Users & Student Accounts (school credential login + Google Auth)
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if true;
+      allow create, update: if isValidId(userId) && isValidPayload();
+      allow delete: if isValidId(userId);
+    }
+
+    // Web Publications & School Articles
+    match /konten/{kontenId} {
+      allow get: if isValidId(kontenId);
+      allow list: if true;
+      allow create, update: if isValidId(kontenId) && isValidPayload();
+      allow delete: if isValidId(kontenId);
+    }
+
+    // CAT Examination Packages & Question Banks
+    match /ujian/{ujianId} {
+      allow get: if isValidId(ujianId);
+      allow list: if true;
+      allow create, update: if isValidId(ujianId) && isValidPayload();
+      allow delete: if isValidId(ujianId);
+    }
+
+    // Exam Results
+    match /hasil_ujian/{hasilId} {
+      allow get: if isValidId(hasilId);
+      allow list: if true;
+      allow create, update: if isValidId(hasilId) && isValidPayload();
+      allow delete: if isValidId(hasilId);
+    }
+
+    // PPDB / SPMB Online Registration
+    match /formulir_ppdb/{ppdbId} {
+      allow get: if isValidId(ppdbId);
+      allow list: if true;
+      allow create, update: if isValidId(ppdbId) && isValidPayload();
+      allow delete: if isValidId(ppdbId);
+    }
+
+    // Attendance & Barcode Records
+    match /absensi/{absensiId} {
+      allow get: if isValidId(absensiId);
+      allow list: if true;
+      allow create, update: if isValidId(absensiId) && isValidPayload();
+      allow delete: if isValidId(absensiId);
+    }
+
+    // Teacher Attendance & Teaching Journal (Absen Mengajar Guru)
+    match /absen_mengajar/{absenId} {
+      allow get: if isValidId(absenId);
+      allow list: if true;
+      allow create, update: if isValidId(absenId) && isValidPayload();
+      allow delete: if isValidId(absenId);
+    }
+
+    // Kelas & Rombel
+    match /kelas/{kelasId} {
+      allow get: if isValidId(kelasId);
+      allow list: if true;
+      allow create, update: if isValidId(kelasId) && isValidPayload();
+      allow delete: if isValidId(kelasId);
+    }
+
+    // Mapel
+    match /mapel/{mapelId} {
+      allow get: if isValidId(mapelId);
+      allow list: if true;
+      allow create, update: if isValidId(mapelId) && isValidPayload();
+      allow delete: if isValidId(mapelId);
+    }
+
+    // Jadwal Pelajaran & Ujian
+    match /jadwal_pelajaran/{jadwalId} {
+      allow get: if isValidId(jadwalId);
+      allow list: if true;
+      allow create, update: if isValidId(jadwalId) && isValidPayload();
+      allow delete: if isValidId(jadwalId);
+    }
+
+    match /jadwal_ujian/{jadwalId} {
+      allow get: if isValidId(jadwalId);
+      allow list: if true;
+      allow create, update: if isValidId(jadwalId) && isValidPayload();
+      allow delete: if isValidId(jadwalId);
+    }
+
+    // Nilai & Ekskul
+    match /nilai/{nilaiId} {
+      allow get: if isValidId(nilaiId);
+      allow list: if true;
+      allow create, update: if isValidId(nilaiId) && isValidPayload();
+      allow delete: if isValidId(nilaiId);
+    }
+
+    match /ekskul/{ekskulId} {
+      allow get: if isValidId(ekskulId);
+      allow list: if true;
+      allow create, update: if isValidId(ekskulId) && isValidPayload();
+      allow delete: if isValidId(ekskulId);
+    }
+
+    match /nilai_ekskul/{nilaiId} {
+      allow get: if isValidId(nilaiId);
+      allow list: if true;
+      allow create, update: if isValidId(nilaiId) && isValidPayload();
+      allow delete: if isValidId(nilaiId);
+    }
+
+    // System Backup Snapshots
+    match /system_backups/{backupId} {
+      allow get: if isValidId(backupId);
+      allow list: if true;
+      allow create, update: if isValidId(backupId) && isValidPayload();
+      allow delete: if isValidId(backupId);
+    }
+
+    // Connection Healthcheck Document (read-only get)
+    match /test/{testId} {
+      allow get: if isValidId(testId);
+      allow list, write: if false;
+    }
+
+    // Global Deny All Fallback
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
